@@ -20,12 +20,9 @@
             <div class="lg:w-2/3 bg-white rounded-lg shadow">
                 <div class="p-6 border-b border-gray-200 flex justify-between items-center">
                     <h2 class="text-xl font-semibold text-gray-900">Active Orders</h2>
-                    <form method="POST" action="/clear_orders">
-                        <button type="submit" class="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700"
-                                onclick="return confirm('Are you sure you want to clear all orders? This action cannot be undone.')">
-                            <i class="fas fa-trash mr-2"></i> Clear All Orders
-                        </button>
-                    </form>
+                    <button id="clearOrdersBtn" class="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700">
+                        <i class="fas fa-trash mr-2"></i> Clear All Orders
+                    </button>
                 </div>
                 
                 <div class="overflow-x-auto">
@@ -130,7 +127,7 @@
                       <tr class="border-b">
                         <td class="py-1">{{ item.name }}</td>
                         <td class="text-right">{{ item.quantity }}</td>
-                        <td class="text-right">${{ item.price }}</td>
+                        <td class="text-right">{{ item.price }} KD</td>
                       </tr>
                     {% endfor %}
                   </tbody>
@@ -145,5 +142,58 @@
           {% endfor %}
         </div>
     </main>
+
+    <!-- Password modal for order deletion -->
+    <div id="passwordModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h3 class="text-xl font-bold mb-4">Admin Authentication</h3>
+            <p class="mb-4">Please enter the admin password to clear all orders.</p>
+            <form id="deleteForm" method="POST" action="/clear_orders">
+                <div class="mb-4">
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="password" name="password" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" id="cancelDelete" 
+                            class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                        Confirm Delete
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript to handle the password modal
+        document.addEventListener('DOMContentLoaded', function() {
+            const clearOrdersBtn = document.getElementById('clearOrdersBtn');
+            const passwordModal = document.getElementById('passwordModal');
+            const cancelDelete = document.getElementById('cancelDelete');
+            
+            clearOrdersBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                passwordModal.classList.remove('hidden');
+            });
+            
+            cancelDelete.addEventListener('click', function() {
+                passwordModal.classList.add('hidden');
+                document.getElementById('password').value = '';
+            });
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', function(event) {
+                if (event.target === passwordModal) {
+                    passwordModal.classList.add('hidden');
+                    document.getElementById('password').value = '';
+                }
+            });
+        });
+    </script>
 </body>
+</html></body>
 </html>

@@ -418,6 +418,17 @@ def admin():
 @app.route('/clear_orders', methods=['POST'])
 def clear_orders():
     try:
+        # Get the password from the form
+        submitted_password = request.form.get('password')
+        
+        # Get the correct password from environment variables
+        correct_password = os.environ.get('DELETE_PASS')
+        
+        # Verify the password
+        if not submitted_password or submitted_password != correct_password:
+            return render_template('error.html', error="Incorrect password. Orders were not cleared.")
+        
+        # If password is correct, proceed with clearing orders
         response = supabase.table('order-list').select('order_id').execute()
         order_ids = [order['order_id'] for order in response.data if isinstance(order, dict) and 'order_id' in order]
         
