@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Charity Food Sale</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+            <a href="/" class="bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700">Back to Store</a>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="flex flex-col lg:flex-row gap-6">
+            <!-- Active Orders -->
+            <div class="lg:w-2/3 bg-white rounded-lg shadow">
+                <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+                    <h2 class="text-xl font-semibold text-gray-900">Active Orders</h2>
+                    <form method="POST" action="/clear_orders">
+                        <button type="submit" class="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700"
+                                onclick="return confirm('Are you sure you want to clear all orders? This action cannot be undone.')">
+                            <i class="fas fa-trash mr-2"></i> Clear All Orders
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Order ID
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Customer
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Item
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Quantity
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Membership
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% if orders %}
+                                {% for order in orders %}
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        {{ order.order_id }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {{ order.customer_name if 'customer_name' in order else order.name }}
+                                        <p class="text-xs text-gray-400">
+                                            {{ order.phone if 'phone' in order else 'No phone' }}
+                                        </p>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {{ order.item if 'item' in order else order.name }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {{ order.quantity if 'quantity' in order else '1' }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {{ order.membership if 'membership' in order else 'None' }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">No active orders</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Summary -->
+            <div class="lg:w-1/3 space-y-6">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Order Summary</h2>
+                    
+                    {% if item_summary %}
+                        <div class="space-y-2">
+                            {% for item_name, quantity in item_summary.items() %}
+                                <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                                    <span>{{ item_name }}</span>
+                                    <span class="font-medium">{{ quantity }} ordered</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-gray-500 text-center py-4">No items ordered yet</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Details - New Schema Handling -->
+        <div class="mt-8">
+          <h2 class="text-xl font-semibold text-gray-900 mb-4">Order Details</h2>
+          
+          {% for order in orders %}
+            <div class="order-card bg-white shadow rounded p-4 mb-4">
+              <h3 class="font-bold text-lg">Order #{{ order.order_id }}</h3>
+              <p>Customer: {{ order.customer_name }}</p>
+              <p>Phone: {{ order.phone }}</p>
+              
+              <!-- Handle orders with JSON arrays (new schema) -->
+              {% if order.items_display %}
+                <h4 class="font-semibold mt-2">Items:</h4>
+                <table class="w-full mt-2">
+                  <thead>
+                    <tr class="border-b">
+                      <th class="text-left">Item</th>
+                      <th class="text-right">Quantity</th>
+                      <th class="text-right">Price</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for item in order.items_display %}
+                      <tr class="border-b">
+                        <td class="py-1">{{ item.name }}</td>
+                        <td class="text-right">{{ item.quantity }}</td>
+                        <td class="text-right">${{ item.price }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              
+              <!-- Handle single item orders (old schema) -->
+              {% elif order.item and not order.item is iterable %}
+                <h4 class="font-semibold mt-2">Item:</h4>
+                <p>{{ order.item }} (Qty: {{ order.quantity }})</p>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+    </main>
+</body>
+</html>
