@@ -445,6 +445,33 @@ def clear_orders():
         print(f"Error clearing orders: {str(e)}")
         return render_template('error.html', error=f"Could not clear orders: {str(e)}")
 
+@app.route('/delete_order', methods=['POST'])
+def delete_order():
+    try:
+        # Get the order ID and password from the form
+        order_id = request.form.get('order_id')
+        submitted_password = request.form.get('password')
+        
+        # Get the correct password from environment variables
+        correct_password = os.environ.get('DELETE_PASS')
+        
+        # Verify the password
+        if not submitted_password or submitted_password != correct_password:
+            return render_template('error.html', error="Incorrect password. The order was not deleted.")
+        
+        # If password is correct, proceed with deleting the order
+        if order_id:
+            print(f"Deleting order with ID: {order_id}")
+            delete_response = supabase.table('order-list').delete().eq('order_id', order_id).execute()
+            print(f"Deleted order {order_id}: {delete_response}")
+            
+            return redirect(url_for('admin'))
+        else:
+            return render_template('error.html', error="No order ID provided.")
+    except Exception as e:
+        print(f"Error deleting order: {str(e)}")
+        return render_template('error.html', error=f"Could not delete order: {str(e)}")
+
 if __name__ == '__main__':
     # Add a custom template filter to convert Python boolean to string for JavaScript
     @app.template_filter('to_js_bool')
