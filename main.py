@@ -347,10 +347,22 @@ def admin():
         orders = response.data
         
         item_summary = {}
+        total_amount_collected = 0
+        
+        # Get food items to access price information
+        food_items_response = supabase.table('food-items').select('*').execute()
+        food_items = food_items_response.data
+        
+        # Create a price lookup dictionary
+        price_lookup = {}
+        for item in food_items:
+            price_lookup[item['name']] = item.get('price', 0)
         
         # Process orders
         for order in orders:
             if isinstance(order, dict):
+                order_total = 0
+                
                 if 'item' in order and isinstance(order['item'], str) and '(x' in order['item']:
                     items_string = order['item']
                     items_parts = items_string.split(', ')
@@ -366,6 +378,10 @@ def admin():
                                 except (ValueError, IndexError):
                                     quantity = 1
                                 
+                                # Update order total
+                                item_price = price_lookup.get(item_name, 0)
+                                order_total += item_price * quantity
+                                
                                 if item_name in item_summary:
                                     item_summary[item_name] += quantity
                                 else:
@@ -377,12 +393,20 @@ def admin():
                         quantity = int(order.get('quantity', 1))
                     except (ValueError, TypeError):
                         quantity = 1
+                    
+                    # Update order total
+                    item_price = price_lookup.get(item_name, 0)
+                    order_total += item_price * quantity
                         
                     # Update summary
                     if item_name in item_summary:
                         item_summary[item_name] += quantity
                     else:
                         item_summary[item_name] = quantity
+                
+                # Add total amount to the order
+                order['total_amount'] = round(order_total, 3)
+                total_amount_collected += order_total
         
         sorted_summary = dict(sorted(item_summary.items()))
         
@@ -408,7 +432,10 @@ def admin():
                 
                 parsed_orders.append(parsed_order)
         
-        return render_template('admin.html', orders=parsed_orders, item_summary=sorted_summary)
+        return render_template('admin.html', 
+                              orders=parsed_orders, 
+                              item_summary=sorted_summary,
+                              total_amount=round(total_amount_collected, 3))
     except Exception as e:
         import traceback
         print(f"Error in admin route: {e}")

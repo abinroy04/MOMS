@@ -43,6 +43,9 @@
                                     Quantity
                                 </th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Amount
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Membership
                                 </th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -53,7 +56,7 @@
                         <tbody class="bg-white divide-y divide-gray-200">
                             {% if orders %}
                                 {% for order in orders %}
-                                <tr>
+                                <tr class="order-row">
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                         {{ order.order_id }}
                                     </td>
@@ -64,10 +67,36 @@
                                         </p>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {{ order.item if 'item' in order else order.name }}
+                                        <div class="bg-gray-50 rounded p-2">
+                                            {% if 'item' in order and '(x' in order.item %}
+                                                {% set items_parts = order.item.split(', ') %}
+                                                <ul class="space-y-1 text-xs">
+                                                {% for item_part in items_parts %}
+                                                    {% if '(x' in item_part %}
+                                                        {% set item_name_parts = item_part.split(' (x') %}
+                                                        {% if item_name_parts|length >= 2 %}
+                                                            <li class="flex justify-between">
+                                                                <span>{{ item_name_parts[0] }}</span>
+                                                                <span class="font-medium">x{{ item_name_parts[1].rstrip(')') }}</span>
+                                                            </li>
+                                                        {% endif %}
+                                                    {% endif %}
+                                                {% endfor %}
+                                                </ul>
+                                            {% else %}
+                                                <p class="text-xs">{{ order.item }}</p>
+                                            {% endif %}
+                                        </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         {{ order.quantity if 'quantity' in order else '1' }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {% if 'total_amount' in order %}
+                                            {{ order.total_amount }} KD
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         {{ order.membership if 'membership' in order else 'None' }}
@@ -85,7 +114,7 @@
                                 {% endfor %}
                             {% else %}
                                 <tr>
-                                    <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">No active orders</td>
+                                    <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">No active orders</td>
                                 </tr>
                             {% endif %}
                         </tbody>
@@ -120,7 +149,12 @@
           
           {% for order in orders %}
             <div class="order-card bg-white shadow rounded p-4 mb-4">
-              <h3 class="font-bold text-lg">Order #{{ order.order_id }}</h3>
+              <div class="flex justify-between items-center">
+                <h3 class="font-bold text-lg">Order #{{ order.order_id }}</h3>
+                {% if 'total_amount' in order %}
+                <div class="font-bold text-green-600">{{ order.total_amount }} KD</div>
+                {% endif %}
+              </div>
               <p>Customer: {{ order.customer_name }}</p>
               <p>Phone: {{ order.phone }}</p>
               
@@ -153,6 +187,26 @@
               {% endif %}
             </div>
           {% endfor %}
+        </div>
+
+        <!-- Total Amount Section -->
+        <div class="mt-8 bg-white shadow rounded-lg p-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-semibold text-gray-900">Total Amount Collected</h2>
+                <div class="text-2xl font-bold text-green-600">
+                    {% if total_amount %}
+                        {{ total_amount }} KD
+                    {% else %}
+                        0.000 KD
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="mt-4 pt-4 border-t border-gray-200">
+                <div class="text-sm text-gray-500">
+                    <p><i class="fas fa-info-circle mr-2"></i>This is the total amount collected from all active orders.</p>
+                </div>
+            </div>
         </div>
     </main>
 
