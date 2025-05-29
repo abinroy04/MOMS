@@ -10,7 +10,7 @@ supabase==1.0.3
 python-dotenv==1.0.0
 
 # Data processing and Excel generation
-pandas==2.0.3
+pandas==2.2.2
 xlsxwriter==3.1.2  # Primary Excel engine
 openpyxl==3.1.2    # Alternative Excel engine
 
