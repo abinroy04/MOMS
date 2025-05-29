@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout - Food Sale</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
@@ -62,26 +63,84 @@
             </div>
         </div>
     </main>
+    
+    <!-- Add footer -->
+    <footer class="bg-white py-6 mt-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="border-t border-gray-200 pt-4">
+                <p class="text-center text-sm text-gray-500">
+                    Developed by 
+                    <a href="https://www.linkedin.com/in/abin-roy-750783293/" 
+                       target="_blank" 
+                       rel="noopener noreferrer" 
+                       class="text-indigo-600 hover:text-indigo-800 hover:underline">
+                        Abin Roy
+                    </a>
+                </p>
+            </div>
+        </div>
+    </footer>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             updateOrderSummary();
             
-            // Form validation
-            const form = document.getElementById('checkoutForm');
+            // Form field validation on input
             const nameInput = document.getElementById('name');
             const phoneInput = document.getElementById('phone');
-            const placeOrderBtn = document.getElementById('placeOrderBtn');
+            const nameError = document.getElementById('nameError');
+            const phoneError = document.getElementById('phoneError');
             
-            function validateForm() {
-                const isNameValid = nameInput.value.trim().length > 0;
-                const isPhoneValid = phoneInput.value.trim().length > 0;
-                placeOrderBtn.disabled = !(isNameValid && isPhoneValid);
+            nameInput.addEventListener('input', function() {
+                if (this.value.trim().length > 0) {
+                    nameError.classList.add('hidden');
+                    this.classList.remove('border-red-500');
+                }
+            });
+            
+            phoneInput.addEventListener('input', function() {
+                if (this.validity.valid) {
+                    phoneError.classList.add('hidden');
+                    this.classList.remove('border-red-500');
+                }
+            });
+        });
+        
+        function validateCheckoutForm() {
+            let isValid = true;
+            const nameInput = document.getElementById('name');
+            const phoneInput = document.getElementById('phone');
+            const nameError = document.getElementById('nameError');
+            const phoneError = document.getElementById('phoneError');
+            
+            // Validate name
+            if (nameInput.value.trim().length === 0) {
+                nameError.classList.remove('hidden');
+                nameInput.classList.add('border-red-500');
+                isValid = false;
+            } else {
+                nameError.classList.add('hidden');
+                nameInput.classList.remove('border-red-500');
             }
             
-            nameInput.addEventListener('input', validateForm);
-            phoneInput.addEventListener('input', validateForm);
-        });
+            // Validate phone
+            if (!phoneInput.validity.valid || phoneInput.value.trim().length === 0) {
+                phoneError.classList.remove('hidden');
+                phoneInput.classList.add('border-red-500');
+                isValid = false;
+            } else {
+                phoneError.classList.add('hidden');
+                phoneInput.classList.remove('border-red-500');
+            }
+            
+            // Validate cart is not empty
+            if (Object.keys(window.cartItems || {}).length === 0) {
+                alert('Your cart is empty. Please add items before checkout.');
+                isValid = false;
+            }
+            
+            return isValid;
+        }
         
         function updateOrderSummary() {
             fetch('/get_cart')

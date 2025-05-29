@@ -4,14 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Food Sale</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Add responsive button styling -->
+    <style>
+        @media (max-width: 640px) {
+            .responsive-btn {
+                font-size: 0.75rem; /* 12px */
+                padding: 0.375rem 0.625rem; /* 6px 10px */
+            }
+            
+            .responsive-btn i {
+                margin-right: 0.25rem; /* 4px */
+            }
+            
+            .responsive-text {
+                font-size: 0.75rem; /* 12px */
+            }
+            
+            .responsive-header {
+                font-size: 1.125rem; /* 18px */
+            }
+        }
+    </style>
 </head>
 <body class="bg-gray-100">
     <header class="bg-white shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-            <a href="/" class="bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700">Back to Store</a>
+            <h1 class="text-2xl font-bold text-gray-900 responsive-header">Admin Dashboard</h1>
+            <div class="flex space-x-1 sm:space-x-3">
+                {% if EXCEL_ENGINE %}
+                    <a href="/export_excel" class="bg-green-600 text-white py-2 px-3 sm:px-4 rounded hover:bg-green-700 responsive-btn">
+                        <i class="fas fa-file-excel mr-1 sm:mr-2"></i> <span class="responsive-text">Export to Excel</span>
+                    </a>
+                {% else %}
+                    <button 
+                        title="Excel export requires xlsxwriter or openpyxl library" 
+                        class="bg-gray-400 text-white py-2 px-3 sm:px-4 rounded cursor-not-allowed responsive-btn">
+                        <i class="fas fa-file-excel mr-1 sm:mr-2"></i> <span class="responsive-text">Export to Excel</span>
+                    </button>
+                {% endif %}
+                <a href="/" class="bg-indigo-600 text-white py-2 px-3 sm:px-4 rounded hover:bg-indigo-700 responsive-btn">
+                    <i class="fas fa-home mr-1 sm:mr-2"></i> <span class="responsive-text">Back to Store</span>
+                </a>
+            </div>
         </div>
     </header>
 
@@ -21,8 +58,8 @@
             <div class="lg:w-2/3 bg-white rounded-lg shadow">
                 <div class="p-6 border-b border-gray-200 flex justify-between items-center">
                     <h2 class="text-xl font-semibold text-gray-900">Active Orders</h2>
-                    <button id="clearOrdersBtn" class="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700">
-                        <i class="fas fa-trash mr-2"></i> Clear All Orders
+                    <button id="clearOrdersBtn" class="bg-red-600 text-white py-2 px-3 sm:px-4 rounded hover:bg-red-700 responsive-btn">
+                        <i class="fas fa-trash mr-1 sm:mr-2"></i> <span class="responsive-text">Clear All Orders</span>
                     </button>
                 </div>
                 
@@ -103,11 +140,11 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <button 
-                                            class="delete-order-btn text-red-600 hover:text-red-900"
+                                            class="delete-order-btn text-red-600 hover:text-red-900 responsive-btn"
                                             data-order-id="{{ order.order_id }}"
                                             data-customer-name="{{ order.customer_name if 'customer_name' in order else order.name }}"
                                             data-items="{{ order.item if 'item' in order else order.name }}">
-                                            <i class="fas fa-trash"></i> Delete
+                                            <i class="fas fa-trash"></i> <span class="responsive-text">Delete</span>
                                         </button>
                                     </td>
                                 </tr>
@@ -141,53 +178,7 @@
                     {% endif %}
                 </div>
             </div>
-        </div>
-
-        <!-- Order Details - New Schema Handling -->
-        <div class="mt-8">
-          <h2 class="text-xl font-semibold text-gray-900 mb-4">Order Details</h2>
-          
-          {% for order in orders %}
-            <div class="order-card bg-white shadow rounded p-4 mb-4">
-              <div class="flex justify-between items-center">
-                <h3 class="font-bold text-lg">Order #{{ order.order_id }}</h3>
-                {% if 'total_amount' in order %}
-                <div class="font-bold text-green-600">{{ order.total_amount }} KD</div>
-                {% endif %}
-              </div>
-              <p>Customer: {{ order.customer_name }}</p>
-              <p>Phone: {{ order.phone }}</p>
-              
-              <!-- Handle orders with JSON arrays (new schema) -->
-              {% if order.items_display %}
-                <h4 class="font-semibold mt-2">Items:</h4>
-                <table class="w-full mt-2">
-                  <thead>
-                    <tr class="border-b">
-                      <th class="text-left">Item</th>
-                      <th class="text-right">Quantity</th>
-                      <th class="text-right">Price</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for item in order.items_display %}
-                      <tr class="border-b">
-                        <td class="py-1">{{ item.name }}</td>
-                        <td class="text-right">{{ item.quantity }}</td>
-                        <td class="text-right">{{ item.price }} KD</td>
-                      </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              
-              <!-- Handle single item orders (old schema) -->
-              {% elif order.item and not order.item is iterable %}
-                <h4 class="font-semibold mt-2">Item:</h4>
-                <p>{{ order.item }} (Qty: {{ order.quantity }})</p>
-              {% endif %}
-            </div>
-          {% endfor %}
-        </div>
+        </div>  
 
         <!-- Total Amount Section -->
         <div class="mt-8 bg-white shadow rounded-lg p-6">
@@ -268,6 +259,39 @@
         </div>
     </div>
 
+    <!-- Add a tooltip that shows when the export button is disabled -->
+    {% if not EXCEL_ENGINE %}
+    <div class="fixed bottom-4 right-4 max-w-sm bg-yellow-50 border border-yellow-300 text-yellow-800 p-4 rounded shadow-lg" id="exportTooltip">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <i class="fas fa-exclamation-circle text-yellow-400"></i>
+            </div>
+            <div class="ml-3">
+                <h3 class="font-medium">Excel Export Unavailable</h3>
+                <div class="mt-2 text-sm">
+                    <p>To enable Excel exports, please have your administrator install one of these packages:</p>
+                    <code class="block bg-yellow-100 p-1 mt-1 font-mono text-xs">pip install xlsxwriter</code>
+                    <p class="mt-1">or</p>
+                    <code class="block bg-yellow-100 p-1 mt-1 font-mono text-xs">pip install openpyxl</code>
+                </div>
+                <button class="mt-2 text-yellow-700 hover:text-yellow-900 text-sm font-medium" onclick="hideTooltip()">
+                    Dismiss
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Function to hide the export tooltip
+        function hideTooltip() {
+            document.getElementById('exportTooltip').style.display = 'none';
+        }
+        
+        // Hide tooltip after 10 seconds
+        setTimeout(hideTooltip, 10000);
+    </script>
+    {% endif %}
+
     <script>
         // JavaScript to handle the password modal
         document.addEventListener('DOMContentLoaded', function() {
@@ -328,5 +352,22 @@
             });
         });
     </script>
+    
+    <!-- Add footer -->
+    <footer class="bg-white py-6 mt-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="border-t border-gray-200 pt-4">
+                <p class="text-center text-sm text-gray-500">
+                    Developed by 
+                    <a href="https://www.linkedin.com/in/abin-roy-750783293/" 
+                       target="_blank" 
+                       rel="noopener noreferrer" 
+                       class="text-indigo-600 hover:text-indigo-800 hover:underline">
+                        Abin Roy
+                    </a>
+                </p>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>

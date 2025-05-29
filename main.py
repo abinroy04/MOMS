@@ -4,6 +4,29 @@ from supabase import create_client
 import uuid
 from datetime import datetime
 from dotenv import load_dotenv
+from io import BytesIO
+from flask import send_file
+
+try:
+    import pandas as pd
+    
+    # Check if xlsxwriter is available
+    EXCEL_ENGINE = None
+    try:
+        import xlsxwriter
+        EXCEL_ENGINE = 'xlsxwriter'
+    except ImportError:
+        # Try openpyxl as an alternative
+        try:
+            import openpyxl
+            EXCEL_ENGINE = 'openpyxl'
+        except ImportError:
+            # If neither is available, Excel export won't be available
+            pass
+            
+except ImportError:
+    pd = None
+    EXCEL_ENGINE = None
 
 # Load environment variables from .env file
 load_dotenv()
@@ -14,6 +37,12 @@ app.secret_key = os.urandom(24)
 SUPABASE_URL = os.environ.get('SUPA_URL')
 SUPABASE_KEY = os.environ.get('SUPA_KEY')
 
+# Google API configuration
+CLIENT_SECRETS_FILE = os.environ.get('GOOGLE_CLIENT_SECRETS_FILE', 'client_secret.json')
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+API_SERVICE_NAME = 'sheets'
+API_VERSION = 'v4'
+REDIRECT_URI = os.environ.get('REDIRECT_URI', 'http://localhost:5000/oauth2callback')
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
@@ -435,7 +464,8 @@ def admin():
         return render_template('admin.html', 
                               orders=parsed_orders, 
                               item_summary=sorted_summary,
-                              total_amount=round(total_amount_collected, 3))
+                              total_amount=round(total_amount_collected, 3),
+                              EXCEL_ENGINE=EXCEL_ENGINE)
     except Exception as e:
         import traceback
         print(f"Error in admin route: {e}")
@@ -499,7 +529,167 @@ def delete_order():
         print(f"Error deleting order: {str(e)}")
         return render_template('error.html', error=f"Could not delete order: {str(e)}")
 
+@app.route('/export_excel')
+def export_excel():
+    """Export all orders as Excel file"""
+    try:
+        # Check if pandas and an Excel engine are available
+        if pd is None or EXCEL_ENGINE is None:
+            return render_template('error.html', 
+                              error="Excel export not available",
+                              details="Required libraries are not installed. Please run: pip install pandas xlsxwriter or pip install pandas openpyxl")
+        
+        # Get all active orders
+        response = supabase.table('order-list').select('*').execute()
+        orders = response.data
+        
+        # Get food items for price lookup
+        food_items_response = supabase.table('food-items').select('*').execute()
+        food_items = food_items_response.data
+        
+        # Create a price lookup dictionary
+        price_lookup = {}
+        for item in food_items:
+            price_lookup[item['name']] = item.get('price', 0)
+        
+        # Process orders
+        order_data = []
+        item_summary = {}
+        total_amount_collected = 0
+        
+        for order in orders:
+            if isinstance(order, dict):
+                order_total = 0
+                
+                if 'item' in order and isinstance(order['item'], str) and '(x' in order['item']:
+                    items_string = order['item']
+                    items_parts = items_string.split(', ')
+                    
+                    for item_part in items_parts:
+                        if '(x' in item_part:
+                            item_name_parts = item_part.split(' (x')
+                            if len(item_name_parts) >= 2:
+                                item_name = item_name_parts[0]
+                                try:
+                                    quantity_str = item_name_parts[1].rstrip(')')
+                                    quantity = int(quantity_str)
+                                except (ValueError, IndexError):
+                                    quantity = 1
+                                
+                                # Update order total and item summary
+                                item_price = price_lookup.get(item_name, 0)
+                                order_total += item_price * quantity
+                                
+                                if item_name in item_summary:
+                                    item_summary[item_name] += quantity
+                                else:
+                                    item_summary[item_name] = quantity
+                
+                elif 'item' in order and not isinstance(order['item'], list):
+                    item_name = str(order['item'])
+                    try:
+                        quantity = int(order.get('quantity', 1))
+                    except (ValueError, TypeError):
+                        quantity = 1
+                    
+                    # Update order total and item summary
+                    item_price = price_lookup.get(item_name, 0)
+                    order_total += item_price * quantity
+                        
+                    # Update summary
+                    if item_name in item_summary:
+                        item_summary[item_name] += quantity
+                    else:
+                        item_summary[item_name] = quantity
+                
+                # Add total amount to the order
+                order['total_amount'] = round(order_total, 3)
+                total_amount_collected += order_total
+                
+                # Format the order data for Excel
+                order_dict = {
+                    'Order ID': order.get('order_id', ''),
+                    'Customer Name': order.get('customer_name', ''),
+                    'Phone': order.get('phone', ''),
+                    'Items': order.get('item', ''),
+                    'Quantity': order.get('quantity', ''),
+                    'Membership': order.get('membership', ''),
+                    'Total Amount (KD)': order.get('total_amount', 0)
+                }
+                order_data.append(order_dict)
+        
+        # Create summary data
+        summary_data = [{"Item": item, "Quantity Ordered": qty} for item, qty in item_summary.items()]
+        summary_data.append({"Item": "TOTAL", "Quantity Ordered": sum(item_summary.values())})
+        
+        # Create Excel file with multiple sheets
+        today = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        output = BytesIO()
+        
+        # Create DataFrame for orders
+        df_orders = pd.DataFrame(order_data) if order_data else pd.DataFrame({'No Data': ['No orders found']})
+        
+        # Create DataFrame for summary
+        df_summary = pd.DataFrame(summary_data) if summary_data else pd.DataFrame({'No Data': ['No items ordered']})
+        
+        # Create Excel writer with the available engine
+        with pd.ExcelWriter(output, engine=EXCEL_ENGINE) as writer:
+            df_orders.to_excel(writer, sheet_name='Orders', index=False)
+            df_summary.to_excel(writer, sheet_name='Summary', index=False)
+            
+            # Only apply formatting if xlsxwriter is the engine
+            if EXCEL_ENGINE == 'xlsxwriter':
+                try:
+                    # Format the Orders sheet
+                    workbook = writer.book
+                    worksheet = writer.sheets['Orders']
+                    header_format = workbook.add_format({'bold': True, 'bg_color': '#333333', 'font_color': 'white'})
+                    
+                    for col_num, value in enumerate(df_orders.columns.values):
+                        worksheet.write(0, col_num, value, header_format)
+                    
+                    # Format the Summary sheet
+                    worksheet = writer.sheets['Summary']
+                    total_format = workbook.add_format({'bold': True, 'bg_color': '#DDDDDD'})
+                    
+                    for col_num, value in enumerate(df_summary.columns.values):
+                        worksheet.write(0, col_num, value, header_format)
+                    
+                    # Format total row
+                    if len(summary_data) > 0:
+                        last_row = len(summary_data)
+                        worksheet.set_row(last_row, None, total_format)
+                except Exception as format_error:
+                    print(f"Warning: Could not apply Excel formatting: {str(format_error)}")
+        
+        output.seek(0)
+        
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            download_name=f'orders_export_{today}.xlsx',
+            as_attachment=True
+        )
+        
+    except Exception as e:
+        import traceback
+        print(f"Error exporting Excel: {str(e)}")
+        print(traceback.format_exc())
+        
+        # If the error is specifically about missing xlsxwriter, give a helpful message
+        if "No module named 'xlsxwriter'" in str(e):
+            return render_template('error.html', 
+                                error="Excel export failed - Missing dependency",
+                                details="The xlsxwriter module is not installed. Please run: pip install xlsxwriter")
+        
+        return render_template('error.html', 
+                              error=f"Failed to export data: {str(e)}",
+                              details="There was an error processing your request.")
+
 if __name__ == '__main__':
+    # Allow OAuth over HTTP for development
+    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+    
     # Add a custom template filter to convert Python boolean to string for JavaScript
     @app.template_filter('to_js_bool')
     def to_js_bool(value):

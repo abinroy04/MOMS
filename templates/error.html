@@ -5,40 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Error - Food Sale</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body class="bg-gray-100">
-    <header class="bg-white shadow">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-            <a href="/" class="text-2xl font-bold text-gray-800">Food Market</a>
-        </div>
-    </header>
-
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div class="bg-white p-8 rounded-lg shadow-md text-center max-w-md mx-auto">
-            <div class="inline-flex h-24 w-24 rounded-full bg-red-100 p-4 mb-6 items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
+    <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 text-red-600 mb-4">
+                    <i class="fas fa-exclamation-circle text-3xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-900">Error</h1>
+                <p class="text-gray-600 mt-2">
+                    {{ error }}
+                </p>
+                {% if details %}
+                <div class="mt-4 p-3 bg-gray-50 rounded-lg text-sm text-gray-600 text-left">
+                    {{ details }}
+                </div>
+                {% endif %}
             </div>
             
-            <h1 class="text-3xl font-bold text-gray-900 mb-4">Error</h1>
-            <p class="text-lg text-gray-700 mb-6">Something went wrong while processing your request.</p>
-            
-            <div class="mb-6 p-4 bg-gray-50 rounded-md text-left">
-                <p class="text-gray-600 mb-1">Error details:</p>
-                <p class="font-mono text-sm break-all">{{ error }}</p>
-            </div>
-            
-            <div class="flex flex-col space-y-4">
-                <a href="/checkout" class="inline-block bg-gray-600 text-white py-3 px-6 rounded-md hover:bg-gray-700 transition">
-                    Return to Checkout
-                </a>
-                
-                <a href="/" class="inline-block bg-indigo-600 text-white py-3 px-6 rounded-md hover:bg-indigo-700 transition">
-                    Return to Homepage
+            <div class="flex justify-center">
+                <a href="/admin" class="bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700">
+                    <i class="fas fa-arrow-left mr-2"></i> Back to Admin
                 </a>
             </div>
         </div>
-    </main>
+    </div>
 </body>
 </html>
