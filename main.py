@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 import os
 from supabase import create_client
-import uuid
 from datetime import datetime
 from dotenv import load_dotenv
 from io import BytesIO
