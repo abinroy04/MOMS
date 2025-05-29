@@ -370,8 +370,8 @@ def place_order():
 @app.route('/admin')
 def admin():
     try:
-        # Get all active orders
-        response = supabase.table('order-list').select('*').execute()
+        # Get all active orders and sort by order_id
+        response = supabase.table('order-list').select('*').order('order_id', desc=True).execute()
         orders = response.data
         
         item_summary = {}
