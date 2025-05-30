@@ -36,6 +36,9 @@ app.secret_key = os.urandom(24)
 SUPABASE_URL = os.environ.get('SUPA_URL')
 SUPABASE_KEY = os.environ.get('SUPA_KEY')
 
+# Default value for bookings status
+BOOKINGS_CLOSED = os.environ.get('BOOKINGS_CLOSED', 'false').lower() == 'true'
+
 # Google API configuration
 CLIENT_SECRETS_FILE = os.environ.get('GOOGLE_CLIENT_SECRETS_FILE', 'client_secret.json')
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
@@ -53,6 +56,10 @@ def before_request():
 
 @app.route('/')
 def home():
+    # Check if bookings are closed
+    if BOOKINGS_CLOSED:
+        return redirect(url_for('bookings_closed'))
+        
     # Get food items from Supabase
     response = supabase.table('food-items').select('*').order('id').execute()
     food_items = response.data
@@ -464,12 +471,37 @@ def admin():
                               orders=parsed_orders, 
                               item_summary=sorted_summary,
                               total_amount=round(total_amount_collected, 3),
-                              EXCEL_ENGINE=EXCEL_ENGINE)
+                              EXCEL_ENGINE=EXCEL_ENGINE,
+                              bookings_closed=BOOKINGS_CLOSED)
     except Exception as e:
         import traceback
         print(f"Error in admin route: {e}")
         print(traceback.format_exc())  # Print full traceback for debugging
         return render_template('error.html', error=f"Admin page error: {str(e)}")
+
+@app.route('/toggle_bookings', methods=['POST'])
+def toggle_bookings():
+    try:
+        # Get the password from the form
+        submitted_password = request.form.get('password')
+        
+        # Get the correct password from environment variables
+        correct_password = os.environ.get('DELETE_PASS')
+        
+        # Verify the password
+        if not submitted_password or submitted_password != correct_password:
+            return render_template('error.html', error="Incorrect password. Booking status not changed.")
+        
+        # If password is correct, proceed with toggling bookings status
+        global BOOKINGS_CLOSED
+        BOOKINGS_CLOSED = not BOOKINGS_CLOSED
+        status = "closed" if BOOKINGS_CLOSED else "open"
+        print(f"Bookings status changed to: {status}")
+            
+        return redirect(url_for('admin'))
+    except Exception as e:
+        print(f"Error toggling bookings status: {str(e)}")
+        return render_template('error.html', error=f"Could not change bookings status: {str(e)}")
 
 @app.route('/clear_orders', methods=['POST'])
 def clear_orders():
@@ -685,6 +717,10 @@ def export_excel():
                               error=f"Failed to export data: {str(e)}",
                               details="There was an error processing your request.")
 
+@app.route('/bookings_closed')
+def bookings_closed():
+    return render_template('bookings_closed.html')
+
 if __name__ == '__main__':
     # Allow OAuth over HTTP for development
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
@@ -693,5 +729,21 @@ if __name__ == '__main__':
     @app.template_filter('to_js_bool')
     def to_js_bool(value):
         return str(bool(value))
+    
+    # Add a custom template filter to convert timestamp to datetime in Arabian Standard Time (UTC+3)
+    @app.template_filter('datetime')
+    def format_datetime(timestamp):
+        from datetime import datetime, timedelta
+        try:
+            # Convert timestamp to datetime in UTC
+            dt_utc = datetime.utcfromtimestamp(timestamp)
+            
+            # Add 3 hours for Arabian Standard Time (UTC+3)
+            dt_ast = dt_utc + timedelta(hours=3)
+            
+            # Format the datetime
+            return dt_ast.strftime('%Y-%m-%d %H:%M:%S')
+        except (ValueError, TypeError):
+            return 'Invalid timestamp'
         
     app.run(debug=False)

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookings Closed</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            position: relative;
+            min-height: 100vh;
+        }
+        
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -10;
+            height: 100%;
+            width: 100%;
+            background: white;
+            background: radial-gradient(125% 125% at 50% 10%, #fff 40%, #63e 100%);
+            pointer-events: none;
+        }
+        
+        .content-container {
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(5px);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <main class="flex-grow flex items-center justify-center px-4 py-12">
+        <div class="bg-white-900 bg-opacity-50 backdrop-blur-sm rounded-lg shadow-lg p-8 max-w-md w-full text-center border border-purple-800">
+            <div class="text-6xl text-red-400 mb-6">
+                <i class="fas fa-calendar-xmark"></i>
+            </div>
+            
+            <h2 class="text-2xl font-bold text-black mb-4">Bookings Currently Closed</h2>
+            
+            <p class="text-gray-800 mb-6">
+                Thank you for your interest in the food sale organized by the <strong>Marth Mariam Vanitha Samajam</strong> of <Strong>St. Thomas Indian Orthodox Pazhayapally, Ahmadi, Kuwait</Strong>. <br>
+                We are not accepting new orders at this time.
+                Please check back later or contact us for more information.
+            </p>
+            
+            <div class="bg-white bg-opacity-70 rounded-lg p-4 mb-6">
+                <h3 class="font-medium text-gray-800 mb-2">Contact Information</h3>
+                <p class="text-gray-600">
+                    Secretary: +965 69010603<br>
+                    Vice-President: +965 60366055<br>
+                    Treasurer: +965 69694283<br>
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-transparent py-5 mt-auto relative z-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">    
+            <p class="text-center text-sm text-gray-800">
+                Developed by 
+                <a href="https://www.linkedin.com/in/abin-roy-750783293/" 
+                   target="_blank" 
+                   rel="noopener noreferrer" 
+                   class="text-indigo-600 hover:text-indigo-800 hover:underline">
+                   Abin Roy
+                </a>
+            </p>
+        </div>
+    </footer>
+</body>
+</html>
