@@ -15,13 +15,7 @@ try:
         import xlsxwriter
         EXCEL_ENGINE = 'xlsxwriter'
     except ImportError:
-        # Try openpyxl as an alternative
-        try:
-            import openpyxl
-            EXCEL_ENGINE = 'openpyxl'
-        except ImportError:
-            # If neither is available, Excel export won't be available
-            pass
+        pass
             
 except ImportError:
     pd = None
@@ -56,7 +50,6 @@ def before_request():
 
 @app.route('/')
 def home():
-    # Check if bookings are closed
     if BOOKINGS_CLOSED:
         return redirect(url_for('bookings_closed'))
         
@@ -330,8 +323,8 @@ def place_order():
             order_data = {
                 'order_id': order_id,
                 'customer_name': customer_name,
-                'item': items_text,  # All items as a concatenated string
-                'quantity': total_quantity,  # Sum of all quantities (as an integer)
+                'item': items_text,
+                'quantity': total_quantity,
             }
             
             try:
@@ -370,8 +363,7 @@ def place_order():
     except Exception as e:
         import traceback
         print(f"Error placing order: {str(e)}")
-        print(traceback.format_exc())  # Print full stack trace
-        # Show an error page
+        print(traceback.format_exc())
         return render_template('error.html', error=f"Order processing error: {str(e)}")
 
 @app.route('/admin')
@@ -384,11 +376,9 @@ def admin():
         item_summary = {}
         total_amount_collected = 0
         
-        # Get food items to access price information
         food_items_response = supabase.table('food-items').select('*').execute()
         food_items = food_items_response.data
         
-        # Create a price lookup dictionary
         price_lookup = {}
         for item in food_items:
             price_lookup[item['name']] = item.get('price', 0)
@@ -476,16 +466,13 @@ def admin():
     except Exception as e:
         import traceback
         print(f"Error in admin route: {e}")
-        print(traceback.format_exc())  # Print full traceback for debugging
         return render_template('error.html', error=f"Admin page error: {str(e)}")
 
 @app.route('/toggle_bookings', methods=['POST'])
 def toggle_bookings():
     try:
-        # Get the password from the form
         submitted_password = request.form.get('password')
         
-        # Get the correct password from environment variables
         correct_password = os.environ.get('DELETE_PASS')
         
         # Verify the password
@@ -506,10 +493,8 @@ def toggle_bookings():
 @app.route('/clear_orders', methods=['POST'])
 def clear_orders():
     try:
-        # Get the password from the form
         submitted_password = request.form.get('password')
         
-        # Get the correct password from environment variables
         correct_password = os.environ.get('DELETE_PASS')
         
         # Verify the password
@@ -536,11 +521,9 @@ def clear_orders():
 @app.route('/delete_order', methods=['POST'])
 def delete_order():
     try:
-        # Get the order ID and password from the form
         order_id = request.form.get('order_id')
         submitted_password = request.form.get('password')
         
-        # Get the correct password from environment variables
         correct_password = os.environ.get('DELETE_PASS')
         
         # Verify the password
@@ -570,15 +553,12 @@ def export_excel():
                               error="Excel export not available",
                               details="Required libraries are not installed. Please run: pip install pandas xlsxwriter or pip install pandas openpyxl")
         
-        # Get all active orders
         response = supabase.table('order-list').select('*').execute()
         orders = response.data
         
-        # Get food items for price lookup
         food_items_response = supabase.table('food-items').select('*').execute()
         food_items = food_items_response.data
         
-        # Create a price lookup dictionary
         price_lookup = {}
         for item in food_items:
             price_lookup[item['name']] = item.get('price', 0)
@@ -730,14 +710,12 @@ if __name__ == '__main__':
     def to_js_bool(value):
         return str(bool(value))
     
-    # Add a custom template filter to convert timestamp to datetime in Arabian Standard Time (UTC+3)
     @app.template_filter('datetime')
     def format_datetime(timestamp):
         from datetime import datetime, timedelta
         try:
             # Convert timestamp to datetime in UTC
             dt_utc = datetime.utcfromtimestamp(timestamp)
-            
             # Add 3 hours for Arabian Standard Time (UTC+3)
             dt_ast = dt_utc + timedelta(hours=3)
             

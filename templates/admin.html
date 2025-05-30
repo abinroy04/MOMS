@@ -7,7 +7,7 @@
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Add styles -->
+
     <style>
         body {
             position: relative;
@@ -31,8 +31,8 @@
         .gradient {
             position: absolute;
             border-radius: 100%;
-            opacity: 0.3; /* Reduced opacity for lighter effect on white */
-            mix-blend-mode: multiply; /* Changed to multiply for better effect on white */
+            opacity: 0.3;
+            mix-blend-mode: multiply;
             animation-iteration-count: infinite;
             animation-timing-function: cubic-bezier(0.1, 0, 0.9, 1);
         }
@@ -41,7 +41,7 @@
             background: rgb(226, 155, 248);
             width: 700px;
             height: 700px;
-            animation-duration: 7s; /* Reduced from 11s to 7s */
+            animation-duration: 7s;
             left: 60%;
             top: 40%;
             z-index: -2;
@@ -52,7 +52,7 @@
             background: rgb(139, 92, 193);
             width: 600px;
             height: 600px;
-            animation-duration: 8s; /* Reduced from 11s to 8s */
+            animation-duration: 8s;
             left: 40%;
             top: 60%;
             z-index: -1;
@@ -63,60 +63,13 @@
             background: rgb(152, 26, 255);
             width: 500px;
             height: 500px;
-            animation-duration: 6s; /* Reduced from 11s to 6s */
+            animation-duration: 6s;
             left: 50%;
             top: 50%;
             z-index: -3;
             animation-name: animation-gradient-3;
         }
         
-        /* Additional plasma elements */
-        .gradient-4 {
-            background: rgb(180, 137, 239);
-            width: 400px;
-            height: 400px;
-            animation-duration: 9s;
-            left: 25%;
-            top: 20%;
-            z-index: -2;
-            animation-name: animation-gradient-4;
-        }
-        
-        .gradient-5 {
-            background: rgb(202, 168, 249);
-            width: 450px;
-            height: 450px;
-            animation-duration: 12s;
-            left: 75%;
-            top: 80%;
-            z-index: -3;
-            animation-name: animation-gradient-5;
-        }
-        
-        .gradient-6 {
-            background: rgb(133, 69, 197);
-            width: 380px;
-            height: 380px;
-            animation-duration: 10s;
-            left: 10%;
-            top: 75%;
-            z-index: -2;
-            animation-name: animation-gradient-6;
-        }
-        
-        .floating-orb {
-            position: absolute;
-            width: 150px;
-            height: 150px;
-            border-radius: 100%;
-            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), rgba(200, 150, 255, 0.4));
-            filter: blur(15px);
-            opacity: 0.2;
-            pointer-events: none;
-            z-index: -1;
-            animation: float 15s infinite ease-in-out;
-        }
-
         @keyframes animation-gradient-1 {
             0% {
                 transform: translateY(-50%) translateX(-50%) rotate(-20deg) translateX(20%);
@@ -275,7 +228,6 @@
     </style>
 </head>
 <body>
-    <!-- Plasma Background -->
     <div class="plasma-wrapper">
         <div class="gradient gradient-1"></div>
         <div class="gradient gradient-2"></div>
@@ -489,16 +441,10 @@
                     {% endif %}
                 </div>
             </div>
-            
-            <div class="mt-4 pt-4 border-t border-gray-200">
-                <div class="text-sm text-gray-500">
-                    <p><i class="fas fa-info-circle mr-2"></i>This is the total amount collected from all active orders.</p>
-                </div>
-            </div>
         </div>
     </main>
 
-    <!-- Add Bookings Toggle Modal -->
+    <!-- Bookings Toggle Modal -->
     <div id="toggleBookingsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
         <div class="blur-container p-6 rounded-lg shadow-lg w-96">
             <h3 class="text-xl font-bold mb-4">
@@ -627,8 +573,8 @@
             document.getElementById('exportTooltip').style.display = 'none';
         }
         
-        // Hide tooltip after 10 seconds
-        setTimeout(hideTooltip, 10000);
+        // Hide tooltip after 7 seconds
+        setTimeout(hideTooltip, 7000);
     </script>
     {% endif %}
 
