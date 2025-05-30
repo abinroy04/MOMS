@@ -701,27 +701,22 @@ def export_excel():
 def bookings_closed():
     return render_template('bookings_closed.html')
 
-if __name__ == '__main__':
-    # Allow OAuth over HTTP for development
-    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+@app.template_filter('datetime')
+def format_datetime(timestamp):
+    from datetime import datetime, timedelta
+    try:
+        # Convert timestamp to datetime in UTC and add 3 hours for Arabian Standard Time (UTC+3)
+        dt_utc = datetime.utcfromtimestamp(timestamp)
+        dt_ast = dt_utc + timedelta(hours=3)
+        return dt_ast.strftime('%Y-%m-%d %H:%M:%S')
     
-    # Add a custom template filter to convert Python boolean to string for JavaScript
-    @app.template_filter('to_js_bool')
-    def to_js_bool(value):
-        return str(bool(value))
-    
-    @app.template_filter('datetime')
-    def format_datetime(timestamp):
-        from datetime import datetime, timedelta
-        try:
-            # Convert timestamp to datetime in UTC
-            dt_utc = datetime.utcfromtimestamp(timestamp)
-            # Add 3 hours for Arabian Standard Time (UTC+3)
-            dt_ast = dt_utc + timedelta(hours=3)
-            
-            # Format the datetime
-            return dt_ast.strftime('%Y-%m-%d %H:%M:%S')
-        except (ValueError, TypeError):
-            return 'Invalid timestamp'
-        
+    except (ValueError, TypeError):
+        return 'Invalid timestamp'
+
+# Add a custom template filter to convert Python boolean to string for JavaScript
+@app.template_filter('to_js_bool')
+def to_js_bool(value):
+    return str(bool(value))
+
+if __name__ == '__main__':        
     app.run(debug=False)
